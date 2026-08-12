@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daily Dossier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --papier:#e9e1cf; --papier2:#ded4bd; --encre:#241f18; --terne:#7a6f5b;
+  --trait:#b8ab8f; --rouge:#a33325; --bleu:#3a5b7a; --vert:#4e6b3d;
+  --serif:"Libre Baskerville",Georgia,serif; --machine:"Courier Prime",monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#cfc4a9;font-family:var(--machine);color:var(--encre);
+  display:flex;justify-content:center;min-height:100vh;-webkit-tap-highlight-color:transparent}
+.phone{width:100%;max-width:412px;background:var(--papier);min-height:100vh;position:relative;
+  display:flex;flex-direction:column;
+  background-image:radial-gradient(120% 60% at 50% 0,#f2ecdd 0,transparent 70%)}
+
+.top{padding:18px 18px 14px;border-bottom:2px solid var(--encre);display:flex;
+  justify-content:space-between;align-items:flex-end;gap:12px}
+.ref{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--terne)}
+h1{font-family:var(--serif);font-weight:700;font-size:23px;margin:8px 0 4px;letter-spacing:-.01em}
+.serie{font-size:11px;color:var(--terne)}
+.serie b{color:var(--rouge)}
+.aide{border:1px solid var(--trait);background:transparent;width:30px;height:30px;flex:none;
+  font-family:var(--serif);cursor:pointer;color:var(--terne)}
+
+.recit{padding:13px 18px;font-family:var(--serif);font-size:13px;line-height:1.6;
+  border-bottom:1px solid var(--trait)}
+.recit em{font-style:italic;color:var(--terne)}
+
+.scene{margin:14px 18px 0;border:1px solid var(--trait);background:var(--papier2);padding:10px}
+svg{display:block;width:100%;height:auto}
+
+.sect{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--terne);
+  padding:18px 18px 8px;display:flex;justify-content:space-between}
+
+.fiche{margin:0 18px 7px;border:1px solid var(--trait);background:#f2ecdd;padding:9px 11px;
+  font-size:12.5px;line-height:1.5;display:flex;gap:9px;align-items:flex-start;cursor:pointer}
+.fiche .no{color:var(--rouge);font-weight:700;flex:none}
+.fiche.barre{opacity:.42}
+.fiche.barre .tx{text-decoration:line-through}
+
+/* tableau de déduction */
+.grille{margin:0 18px;border:1px solid var(--trait);background:#f2ecdd}
+.lg{display:grid;grid-template-columns:76px 1fr;border-bottom:1px solid var(--trait)}
+.lg:last-child{border-bottom:0}
+.lg .qui{padding:10px 8px;font-size:12px;border-right:1px solid var(--trait);
+  display:flex;align-items:center;font-weight:700}
+.cells{display:flex}
+.cellzone{flex:1;padding:7px 6px}
+.cellzone+.cellzone{border-left:1px dashed var(--trait)}
+.zt{font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--terne);margin-bottom:5px}
+.chips{display:flex;gap:4px;flex-wrap:wrap}
+.chip{border:1px solid var(--trait);padding:5px 6px;font-size:11px;cursor:pointer;background:#e9e1cf}
+.chip.on{background:var(--encre);color:var(--papier);border-color:var(--encre)}
+.chip.conflit{border-color:var(--rouge);color:var(--rouge)}
+.chip.faux{border-color:var(--rouge);background:#f6dad6}
+.chip.juste{border-color:var(--vert);background:#dfe7d5}
+
+.verdict{margin:14px 18px 0;padding:11px 13px;font-size:12.5px;line-height:1.5;
+  border-left:3px solid var(--terne);background:#f2ecdd;min-height:20px}
+.verdict.ok{border-color:var(--vert)}
+.verdict.ko{border-color:var(--rouge)}
+.verdict b{font-family:var(--serif)}
+
+.foot{margin-top:auto;padding:18px}
+.foot button{width:100%;border:0;background:var(--encre);color:var(--papier);
+  font-family:var(--machine);font-weight:700;font-size:14px;letter-spacing:.14em;
+  text-transform:uppercase;padding:14px;cursor:pointer}
+.foot button[disabled]{opacity:.35;cursor:default}
+.foot .sec{background:transparent;border:1px solid var(--trait);color:var(--terne);margin-top:8px}
+.note{font-size:11px;color:var(--terne);text-align:center;margin-top:12px;line-height:1.5}
+
+.modal{position:absolute;inset:0;background:rgba(233,225,207,.97);z-index:50;display:none;
+  padding:24px 20px;overflow-y:auto}
+.modal.on{display:block}
+.modal h2{font-family:var(--serif);font-size:19px;margin:0 0 14px}
+.modal p{font-size:12.5px;line-height:1.6;margin:0 0 11px}
+.modal .k{color:var(--rouge);font-weight:700}
+.modal button{width:100%;background:var(--encre);color:var(--papier);border:0;padding:14px;
+  margin-top:10px;font-family:var(--machine);font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="phone" id="phone">
+  <div class="top">
+    <div>
+      <div class="ref" id="ref"></div>
+      <h1>Le dernier train de 23 h 10</h1>
+      <div class="serie" id="serie"></div>
+    </div>
+    <button class="aide" id="aide">?</button>
+  </div>
+
+  <p class="recit">Quatre voyageurs sont montés à Vaubrun, chacun dans son compartiment, chacun avec un bagage. À l'arrivée, la sacoche avait changé de mains. <em>Les horaires ne mentent pas, les témoins si.</em></p>
+
+  <div class="scene"><div id="svgzone"></div></div>
+
+  <div class="sect"><span>Pièces au dossier</span><span id="nbind"></span></div>
+  <div id="indices"></div>
+
+  <div class="sect"><span>Ta reconstitution</span><span id="etat"></span></div>
+  <div class="grille" id="grille"></div>
+
+  <div class="verdict" id="verdict">Attribue à chacun un compartiment et un bagage. Une seule répartition satisfait toutes les pièces.</div>
+
+  <div class="foot">
+    <button id="signer">Signer la conclusion</button>
+    <button class="sec" id="suivant">Autre affaire</button>
+    <p class="note" id="note"></p>
+  </div>
+
+  <div class="modal" id="modal">
+    <h2>Comment ça se joue</h2>
+    <p>Quatre voyageurs, quatre compartiments (<span class="k">A à D</span>, dans cet ordre le long du couloir), quatre bagages. Une seule répartition est compatible avec toutes les pièces du dossier.</p>
+    <p>Touche un compartiment puis un bagage sur la ligne de chaque voyageur. Deux personnes ne peuvent pas occuper le même compartiment : le doublon s'affiche en rouge.</p>
+    <p>Touche une pièce du dossier pour la <span class="k">barrer</span> une fois qu'elle t'a servi.</p>
+    <p>En signant, on te dit combien de cases sont justes, jamais lesquelles. Le nombre de signatures compte dans ton résultat.</p>
+    <p>Les pièces sont générées puis élaguées : chacune est <span class="k">nécessaire</span>. Si tu en retires une, la solution n'est plus unique.</p>
+    <button id="fermer">Compris</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+var $=function(s){return document.querySelector(s);};
+var NOMS=["Brenac","Dorval","Kessler","Vasseur"];
+var COMPS=["A","B","C","D"];
+var OBJS=["sacoche","parapluie","valise","carton"];
+var HEURES=["22h30","22h45","22h55","23h05"];
+var ART=["la sacoche","le parapluie","la valise","le carton"];
+var DE=["de la sacoche","du parapluie","de la valise","du carton"];
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);
+  t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+/* permutations de 0..3 */
+var PERMS=(function(){
+  var out=[];
+  function rec(rest,acc){ if(!rest.length){out.push(acc.slice());return;}
+    for(var i=0;i<rest.length;i++){var r=rest.slice();var v=r.splice(i,1)[0];rec(r,acc.concat(v));} }
+  rec([0,1,2,3],[]); return out;
+})();
+
+/* un monde : comp[p]=compartiment de la personne p, obj[p], heure[p] */
+function testeur(c){
+  return {
+    /* pos(p) = v */
+    pos:function(m){return m.comp[c.p]===c.v;},
+    npos:function(m){return m.comp[c.p]!==c.v;},
+    voisin:function(m){return Math.abs(m.comp[c.p]-m.comp[c.q])===1;},
+    nvoisin:function(m){return Math.abs(m.comp[c.p]-m.comp[c.q])!==1;},
+    avant:function(m){return m.heure[c.p]<m.heure[c.q];},
+    obj:function(m){return m.obj[c.p]===c.v;},
+    nobj:function(m){return m.obj[c.p]!==c.v;},
+    objcomp:function(m){var p=m.obj.indexOf(c.v);return m.comp[p]===c.w;},
+    objavant:function(m){var p=m.obj.indexOf(c.v);return m.heure[p]<m.heure[c.q];},
+    objbord:function(m){var p=m.obj.indexOf(c.v);return (m.comp[p]===0||m.comp[p]===3)===c.b;},
+    plustot:function(m){return m.heure[c.p]===c.v;}
+  }[c.t];
+}
+function verifie(c,m){ return testeur(c)(m); }
+
+function texte(c){
+  switch(c.t){
+    case "pos": return NOMS[c.p]+" occupait le compartiment "+COMPS[c.v]+".";
+    case "npos": return NOMS[c.p]+" n'était pas en "+COMPS[c.v]+".";
+    case "voisin": return NOMS[c.p]+" et "+NOMS[c.q]+" occupaient deux compartiments contigus.";
+    case "nvoisin": return NOMS[c.p]+" et "+NOMS[c.q]+" n'étaient pas voisins.";
+    case "avant": return NOMS[c.p]+" est monté avant "+NOMS[c.q]+".";
+    case "obj": return NOMS[c.p]+" voyageait avec "+ART[c.v]+".";
+    case "nobj": return NOMS[c.p]+" n'avait pas "+ART[c.v]+".";
+    case "objcomp": return "On a retrouvé "+ART[c.v]+" dans le compartiment "+COMPS[c.w]+".";
+    case "objavant": return "Le porteur "+DE[c.v]+" est monté avant "+NOMS[c.q]+".";
+    case "objbord": return "On a retrouvé "+ART[c.v]+(c.b?" dans un compartiment d'extrémité (A ou D)":" dans un compartiment central (B ou C)")+".";
+    case "plustot": return NOMS[c.p]+" est monté à "+HEURES[c.v]+".";
+  }
+  return "";
+}
+
+function tousLesMondes(){
+  var out=[];
+  for(var a=0;a<PERMS.length;a++)
+    for(var b=0;b<PERMS.length;b++)
+      for(var h=0;h<PERMS.length;h++)
+        out.push({comp:PERMS[a],obj:PERMS[b],heure:PERMS[h]});
+  return out;
+}
+var MONDES=tousLesMondes();
+
+/* solutions distinctes sur (comp,obj) */
+function solutions(indices){
+  var vus={}, liste=[];
+  for(var i=0;i<MONDES.length;i++){
+    var m=MONDES[i], ok=true;
+    for(var j=0;j<indices.length;j++) if(!verifie(indices[j],m)){ok=false;break;}
+    if(!ok)continue;
+    var k=m.comp.join("")+"|"+m.obj.join("");
+    if(!vus[k]){vus[k]=1;liste.push({comp:m.comp,obj:m.obj});}
+    if(liste.length>1)return liste;
+  }
+  return liste;
+}
+
+function poolIndices(m,rng){
+  var p=[], i, j;
+  for(i=0;i<4;i++){
+    p.push({t:"pos",p:i,v:m.comp[i]});
+    p.push({t:"obj",p:i,v:m.obj[i]});
+    p.push({t:"plustot",p:i,v:m.heure[i]});
+    for(j=0;j<4;j++){
+      if(j===m.comp[i])continue;
+      p.push({t:"npos",p:i,v:j});
+    }
+    for(j=0;j<4;j++){
+      if(j===m.obj[i])continue;
+      p.push({t:"nobj",p:i,v:j});
+    }
+    for(j=0;j<4;j++){
+      if(i===j)continue;
+      if(Math.abs(m.comp[i]-m.comp[j])===1) p.push({t:"voisin",p:i,q:j});
+      else p.push({t:"nvoisin",p:i,q:j});
+      if(m.heure[i]<m.heure[j]) p.push({t:"avant",p:i,q:j});
+    }
+  }
+  for(i=0;i<4;i++){
+    var porteur=m.obj.indexOf(i);
+    p.push({t:"objcomp",v:i,w:m.comp[porteur]});
+    p.push({t:"objbord",v:i,b:(m.comp[porteur]===0||m.comp[porteur]===3)});
+    for(j=0;j<4;j++) if(m.heure[porteur]<m.heure[j]) p.push({t:"objavant",v:i,q:j});
+  }
+  /* pondération : on veut peu d'indices directs */
+  var poids={pos:.25,obj:.3,plustot:.4,npos:1,nobj:1,voisin:1,nvoisin:1,avant:1,
+             objcomp:.5,objbord:1,objavant:1};
+  p.forEach(function(c){c._r=rng()/(poids[c.t]||1);});
+  p.sort(function(a,b){return a._r-b._r;});
+  return p;
+}
+
+function genere(seed){
+  var rng=mulberry32(seed);
+  for(var essai=0;essai<40;essai++){
+    var m={comp:PERMS[Math.floor(rng()*24)],obj:PERMS[Math.floor(rng()*24)],
+           heure:PERMS[Math.floor(rng()*24)]};
+    var pool=poolIndices(m,rng), choisis=[], i;
+    for(i=0;i<pool.length;i++){
+      choisis.push(pool[i]);
+      if(solutions(choisis).length===1)break;
+    }
+    if(solutions(choisis).length!==1)continue;
+    /* élagage : chaque pièce doit être nécessaire */
+    for(i=choisis.length-1;i>=0;i--){
+      var sans=choisis.slice(0,i).concat(choisis.slice(i+1));
+      if(solutions(sans).length===1) choisis=sans;
+    }
+    if(choisis.length<4||choisis.length>8)continue;
+    return {verite:m,indices:choisis};
+  }
+  return null;
+}
+
+/* ---------- état ---------- */
+var affaire=null, choixComp=[null,null,null,null], choixObj=[null,null,null,null],
+    barres={}, signatures=0, resolu=false, serie=0, quotidienne=true, numero=0;
+
+function seedDuJour(){var d=new Date();return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();}
+function numeroDuJour(){var d=new Date();
+  return Math.floor((Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())-Date.UTC(2025,5,20))/864e5);}
+
+function charger(seed,quot){
+  var a=genere(seed);
+  if(!a){ $("#verdict").textContent="Génération impossible — touche « autre affaire »."; return; }
+  affaire=a; quotidienne=quot;
+  choixComp=[null,null,null,null]; choixObj=[null,null,null,null];
+  barres={}; signatures=0; resolu=false;
+  $("#verdict").className="verdict";
+  $("#verdict").textContent="Attribue à chacun un compartiment et un bagage. Une seule répartition satisfait toutes les pièces.";
+  rend();
+}
+
+/* ---------- rendu ---------- */
+function svgScene(){
+  var s='<svg viewBox="0 0 360 150" xmlns="http://www.w3.org/2000/svg">';
+  s+='<rect width="360" height="150" fill="#ded4bd"/>';
+  s+='<rect x="16" y="26" width="328" height="80" fill="none" stroke="#241f18" stroke-width="2"/>';
+  [98,180,262].forEach(function(x){
+    s+='<line x1="'+x+'" y1="26" x2="'+x+'" y2="106" stroke="#241f18" stroke-width="1.5"/>';});
+  for(var c=0;c<4;c++){
+    var cx=57+c*82;
+    s+='<text x="'+cx+'" y="42" font-family="Courier Prime" font-size="10" fill="#7a6f5b" text-anchor="middle">COMP. '+COMPS[c]+'</text>';
+    var qui=-1;
+    for(var p=0;p<4;p++) if(choixComp[p]===c) qui=p;
+    if(qui>=0){
+      s+='<circle cx="'+cx+'" cy="74" r="13" fill="#f2ecdd" stroke="#241f18" stroke-width="2"/>';
+      s+='<text x="'+cx+'" y="78" font-family="Libre Baskerville" font-size="11" fill="#241f18" text-anchor="middle">'+NOMS[qui][0]+'</text>';
+      if(choixObj[qui]!==null)
+        s+='<text x="'+cx+'" y="99" font-family="Courier Prime" font-size="8" fill="#a33325" text-anchor="middle">'+OBJS[choixObj[qui]].toUpperCase()+'</text>';
+    }else{
+      s+='<circle cx="'+cx+'" cy="74" r="13" fill="none" stroke="#b8ab8f" stroke-width="2" stroke-dasharray="3 3"/>';
+    }
+  }
+  s+='<line x1="16" y1="106" x2="344" y2="106" stroke="#241f18" stroke-width="2"/>';
+  s+='<text x="180" y="126" font-family="Courier Prime" font-size="9" fill="#7a6f5b" text-anchor="middle" letter-spacing="1">COULOIR — A ET D SONT LES EXTRÉMITÉS</text>';
+  return s+"</svg>";
+}
+
+function rend(){
+  numero=numeroDuJour();
+  $("#ref").textContent=quotidienne?("Affaire du jour · n° "+numero):"Affaire d'archive";
+  var d=new Date();
+  $("#serie").innerHTML=quotidienne
+    ? d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"})+" — série <b>"+serie+"</b>"
+    : "hors classement";
+  $("#svgzone").innerHTML=svgScene();
+
+  $("#nbind").textContent=affaire.indices.length+" pièces, toutes nécessaires";
+  var ind=$("#indices"); ind.innerHTML="";
+  affaire.indices.forEach(function(c,i){
+    var el=document.createElement("div");
+    el.className="fiche"+(barres[i]?" barre":"");
+    el.innerHTML='<span class="no">'+(i+1)+'</span><span class="tx">'+texte(c)+"</span>";
+    el.onclick=function(){ barres[i]=!barres[i]; rend(); };
+    ind.appendChild(el);
+  });
+
+  var comptC={}, comptO={};
+  choixComp.forEach(function(v){ if(v!==null)comptC[v]=(comptC[v]||0)+1; });
+  choixObj.forEach(function(v){ if(v!==null)comptO[v]=(comptO[v]||0)+1; });
+
+  var g=$("#grille"); g.innerHTML="";
+  NOMS.forEach(function(n,p){
+    var lg=document.createElement("div"); lg.className="lg";
+    var puces=function(liste,sel,cle,compte){
+      return liste.map(function(lab,v){
+        var cls="chip"+(sel===v?" on":"");
+        if(sel===v&&compte[v]>1)cls+=" conflit";
+        if(resolu)cls+=(affaire.verite[cle][p]===v&&sel===v)?" juste":"";
+        return '<span class="'+cls+'" data-p="'+p+'" data-k="'+cle+'" data-v="'+v+'">'+lab+"</span>";
+      }).join("");
+    };
+    lg.innerHTML='<div class="qui">'+n+"</div>"
+      +'<div class="cells">'
+      +'<div class="cellzone"><div class="zt">Compartiment</div><div class="chips">'
+        +puces(COMPS,choixComp[p],"comp",comptC)+"</div></div>"
+      +'<div class="cellzone"><div class="zt">Bagage</div><div class="chips">'
+        +puces(["sac.","para.","val.","cart."],choixObj[p],"obj",comptO)+"</div></div>"
+      +"</div>";
+    g.appendChild(lg);
+  });
+  g.querySelectorAll(".chip").forEach(function(el){
+    el.onclick=function(){
+      if(resolu)return;
+      var p=+el.dataset.p, v=+el.dataset.v;
+      if(el.dataset.k==="comp") choixComp[p]=(choixComp[p]===v)?null:v;
+      else choixObj[p]=(choixObj[p]===v)?null:v;
+      rend();
+    };
+  });
+
+  var complet=choixComp.every(function(v){return v!==null;})&&choixObj.every(function(v){return v!==null;});
+  var doublon=Object.keys(comptC).some(function(k){return comptC[k]>1;})
+           || Object.keys(comptO).some(function(k){return comptO[k]>1;});
+  $("#etat").textContent=resolu?"affaire close":(complet?(doublon?"doublon à corriger":"prêt à signer"):"incomplet");
+  $("#signer").disabled=!complet||doublon||resolu;
+  $("#note").textContent=signatures?("signatures : "+signatures):"";
+}
+
+/* ---------- actions ---------- */
+$("#signer").onclick=function(){
+  var justes=0, i;
+  for(i=0;i<4;i++){
+    if(choixComp[i]===affaire.verite.comp[i])justes++;
+    if(choixObj[i]===affaire.verite.obj[i])justes++;
+  }
+  signatures++;
+  var v=$("#verdict");
+  if(justes===8){
+    resolu=true;
+    if(quotidienne)serie++;
+    v.className="verdict ok";
+    v.innerHTML="<b>Affaire close.</b> Reconstitution exacte en "+signatures
+      +" signature"+(signatures>1?"s":"")+". La sacoche était bien chez "
+      +NOMS[affaire.verite.obj.indexOf(0)]+", compartiment "+COMPS[affaire.verite.comp[affaire.verite.obj.indexOf(0)]]+".";
+  }else{
+    v.className="verdict ko";
+    v.innerHTML="<b>Le juge renvoie le dossier.</b> "+justes+" case"+(justes>1?"s":"")
+      +" sur 8 sont justes — mais on ne te dira pas lesquelles.";
+  }
+  rend();
+};
+$("#suivant").onclick=function(){ charger(Math.floor(Math.random()*1e9),false); };
+$("#aide").onclick=function(){ $("#modal").classList.add("on"); };
+$("#fermer").onclick=function(){ $("#modal").classList.remove("on"); };
+
+charger(seedDuJour(),true);
+</script>
+</body>
+</html>
